@@ -42,3 +42,10 @@ cp .env.example .env  # then fill in your GROQ_API_KEY
     production context, evaluate a keyed provider (Tavily, Serper, Brave 
     Search API) as a replacement tool. Deferred for now — out of scope until 
     we have a concrete reliability requirement driving it.
+
+- **Partial tool failure handling**: observed that when one tool call fails 
+  mid-response (e.g., DuckDuckGo rate limit) while others succeed, the agent 
+  reports the partial failure honestly rather than hallucinating a substitute 
+  answer. This is model behavior, not something we've engineered — not 
+  guaranteed to happen consistently, but a positive signal about the 
+  underlying model's reliability under partial context.
