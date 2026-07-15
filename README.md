@@ -49,3 +49,15 @@ cp .env.example .env  # then fill in your GROQ_API_KEY
   answer. This is model behavior, not something we've engineered — not 
   guaranteed to happen consistently, but a positive signal about the 
   underlying model's reliability under partial context.
+
+- **Hallucination on tool failure (fixed)**: initial testing revealed that 
+  when a tool call failed (e.g., DuckDuckGo rate limit), the model would 
+  sometimes fabricate plausible-looking news articles and URLs from its 
+  training data instead of reporting the failure — a serious correctness 
+  risk for a research agent. Mitigated via explicit `instructions` on the 
+  Agent telling it to report tool failures honestly and never fabricate 
+  sources. Validated against a real rate-limit failure; behavior now 
+  reports the failure correctly. Note: this is a probabilistic mitigation 
+  (prompt-level), not a hard guarantee — a more robust fix (programmatically 
+  detecting failed tool calls before allowing final response synthesis) is 
+  deferred to a future hardening milestone.
