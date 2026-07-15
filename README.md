@@ -61,3 +61,21 @@ cp .env.example .env  # then fill in your GROQ_API_KEY
   (prompt-level), not a hard guarantee — a more robust fix (programmatically 
   detecting failed tool calls before allowing final response synthesis) is 
   deferred to a future hardening milestone.
+
+- **Groq tool-calling retry logic**: observed a ~66% failure rate on 
+  tool-calling requests due to Groq's `tool_use_failed` error (see earlier 
+  entries). Since this now affects a real HTTP API (not just a CLI script 
+  a developer can manually retry), `run_query()` implements a 3-attempt 
+  retry loop with a 1-second delay. This retries on any `ModelProviderError`, 
+  not just the specific transient failure — a genuinely permanent error 
+  (e.g. bad API key) would also be retried uselessly. Refining this to 
+  distinguish transient vs. permanent errors is deferred to a future 
+  observability/hardening milestone, once real production logging exists 
+  to validate the refinement against actual failure data.
+- **Error surfacing**: unhandled `ModelProviderError`s are caught by a 
+  global FastAPI exception handler and returned as a structured `502 Bad 
+  Gateway` response (not the default opaque `500`), since the failure 
+  originates from an upstream provider, not our own code. Verified by 
+  temporarily forcing `MAX_RETRY_ATTEMPTS=1` to reliably trigger the 
+  failure path — confirmed correct status code and response body before 
+  reverting to the production setting of 3.
